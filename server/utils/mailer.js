@@ -24,3 +24,6 @@ exports.sendOtpEmail = async (email, otp) => {
     throw error; // so your API knows sending failed
   }
 };
+
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS);
