@@ -1,34 +1,38 @@
 const Note = require('../models/Note');
+const {encrypt, decrypt} = require('../utils/encryption');
+
 
 // Create a new note
 exports.createNote = async (req, res) => {
-  const { title, content, tags, isPublic, expiryDate } = req.body;
-  const userId = req.user.id; // We'll extract user from JWT middleware later
-
   try {
-    const note = new Note({
-      userId,
+    const { title, content, tags, isPublic, expiryDate } = req.body;
+    const encryptedContent = encrypt(content);
+
+    const newNote = await Note.create({
+      userId: req.user.id,
       title,
-      content,
+      content: encryptedContent,
       tags,
       isPublic,
       expiryDate,
     });
 
-    await note.save();
-    res.status(201).json(note);
+    res.status(201).json(newNote);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 };
 
-// Get all notes for logged-in user (excluding deleted)
 exports.getNotes = async (req, res) => {
-  const userId = req.user.id;
-
   try {
-    const notes = await Note.find({ userId, isDeleted: false });
-    res.json(notes);
+    const notes = await Note.find({ userId: req.user.id, isDeleted: false });
+
+    const decryptedNotes = notes.map(note => ({
+      ...note.toObject(),
+      content: decrypt(note.content),
+    }));
+
+    res.json(decryptedNotes);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -72,3 +76,40 @@ exports.deleteNote = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
+exports.createNote = async (req, res) => {
+    try {
+        const { title, content, tags, isPublic, expiryDate } = req.body;
+        const encryptedContent = encrypt(content);
+
+        const newNote = await Note.create({
+            user: req.user.id,
+            title,
+            content: encryptedContent,
+            tags,
+            isPublic,
+            expiryDate,
+        });
+
+        res.json(newNote);
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+
+exports.getNotes = async (req, res) => {
+    try {
+        const notes = await Note.find({ user: req.user.id, isDeleted: false });
+
+        const decryptedNotes = notes.map(note => ({
+            ...note.toObject(),
+            content: decrypt(note.content),
+        }));
+
+        res.json(decryptedNotes);
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+
+
