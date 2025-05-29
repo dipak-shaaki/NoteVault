@@ -119,3 +119,53 @@ exports.permanentDeleteNote = async (req, res) => {
     }
 };
 
+
+exports.searchNotes = async (req, res) => {
+  try {
+    const { title, tags, isPublic, startDate, endDate } = req.query;
+
+    const filter = { isDeleted: false };
+
+    // User should only see own notes + public notes if filtering is by public
+    if (isPublic === 'true') {
+      filter.isPublic = true;
+    } else if (isPublic === 'false') {
+      // Only private notes by this user
+      filter.isPublic = false;
+      filter.userId = req.user.id;
+    } else {
+      // If no isPublic filter, user can see own notes and public notes
+      filter.$or = [
+        { userId: req.user.id },
+        { isPublic: true },
+      ];
+    }
+
+    if (title) {
+      filter.title = { $regex: title, $options: 'i' };
+    }
+
+    if (tags) {
+      // Split comma separated tags and match if any of the tags match (using $in)
+      const tagsArray = tags.split(',').map(t => t.trim());
+      filter.tags = { $in: tagsArray };
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    const notes = await Note.find(filter);
+
+    const decryptedNotes = notes.map(note => ({
+      ...note.toObject(),
+      content: decrypt(note.content),
+    }));
+
+    res.json(decryptedNotes);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
