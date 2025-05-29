@@ -1,6 +1,5 @@
 const Note = require('../models/Note');
-const {encrypt, decrypt} = require('../utils/encryption');
-
+const { encrypt, decrypt } = require('../utils/encryption');
 
 // Create a new note
 exports.createNote = async (req, res) => {
@@ -9,7 +8,7 @@ exports.createNote = async (req, res) => {
     const encryptedContent = encrypt(content);
 
     const newNote = await Note.create({
-      userId: req.user.id,
+      userId: req.user.id, // ✅ make sure this matches schema
       title,
       content: encryptedContent,
       tags,
@@ -23,6 +22,7 @@ exports.createNote = async (req, res) => {
   }
 };
 
+// Get all notes for user
 exports.getNotes = async (req, res) => {
   try {
     const notes = await Note.find({ userId: req.user.id, isDeleted: false });
@@ -38,7 +38,7 @@ exports.getNotes = async (req, res) => {
   }
 };
 
-// Update a note by id (only if owned by user)
+// Update a note by id
 exports.updateNote = async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params;
@@ -58,7 +58,7 @@ exports.updateNote = async (req, res) => {
   }
 };
 
-// Soft delete a note (move to trash)
+// Soft delete a note
 exports.deleteNote = async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params;
@@ -76,40 +76,4 @@ exports.deleteNote = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
-
-exports.createNote = async (req, res) => {
-    try {
-        const { title, content, tags, isPublic, expiryDate } = req.body;
-        const encryptedContent = encrypt(content);
-
-        const newNote = await Note.create({
-            user: req.user.id,
-            title,
-            content: encryptedContent,
-            tags,
-            isPublic,
-            expiryDate,
-        });
-
-        res.json(newNote);
-    } catch (err) {
-        res.status(500).json({ msg: err.message });
-    }
-};
-
-exports.getNotes = async (req, res) => {
-    try {
-        const notes = await Note.find({ user: req.user.id, isDeleted: false });
-
-        const decryptedNotes = notes.map(note => ({
-            ...note.toObject(),
-            content: decrypt(note.content),
-        }));
-
-        res.json(decryptedNotes);
-    } catch (err) {
-        res.status(500).json({ msg: err.message });
-    }
-};
-
 

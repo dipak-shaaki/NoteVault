@@ -3,7 +3,7 @@ const router = express.Router();
 const { createNote, getNotes, updateNote, deleteNote } = require('../controllers/noteController');
 const authMiddleware = require('../middleware/authmiddleware');
 
-router.use(authMiddleware); // Protect all routes below
+router.use(authMiddleware);
 
 router.post('/', createNote);
 router.get('/', getNotes);

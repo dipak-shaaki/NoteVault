@@ -10,7 +10,6 @@ const noteSchema = new mongoose.Schema({
   isDeleted: { type: Boolean, default: false },
 }, { timestamps: true });
 
-
 // Update updatedAt on save
 noteSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
