@@ -207,3 +207,33 @@ exports.changeUsername = async (req, res) => {
         res.status(500).json({ msg: 'Server error' });
     }
 };
+
+
+//update user profile
+
+exports.updateProfile = async (req, res) => {
+    const { bio, avatarUrl } = req.body;
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        if (bio !== undefined) user.bio = bio;
+        if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+
+        await user.save();
+
+        res.json({
+            msg: 'Profile updated successfully',
+            user: {
+                username: user.username,
+                email: user.email,
+                bio: user.bio,
+                avatarUrl: user.avatarUrl
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+

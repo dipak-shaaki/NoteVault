@@ -18,6 +18,8 @@ router.post('/change-password', authMiddleware, authController.changePassword);
 router.use(authMiddleware);
 
 router.patch('/change-username', authController.changeUsername);
+router.patch('/update-profile', authController.updateProfile);
+
 
 
 module.exports = router;
