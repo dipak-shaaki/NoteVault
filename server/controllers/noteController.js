@@ -8,7 +8,7 @@ exports.createNote = async (req, res) => {
     const encryptedContent = encrypt(content);
 
     const newNote = await Note.create({
-      userId: req.user.id, // ✅ make sure this matches schema
+      userId: req.user.id, 
       title,
       content: encryptedContent,
       tags,
@@ -107,7 +107,8 @@ exports.restoreNote = async (req, res) => {
     }
 };
 
-// 🆕 Permanently delete note
+//After putting the note in trash, you can permanently delete it
+
 exports.permanentDeleteNote = async (req, res) => {
     try {
         const note = await Note.findOneAndDelete({ _id: req.params.id, userId: req.user.id, isDeleted: true });
