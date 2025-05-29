@@ -8,7 +8,7 @@ exports.createNote = async (req, res) => {
     const encryptedContent = encrypt(content);
 
     const newNote = await Note.create({
-      userId: req.user.id, 
+      userId: req.user.id,
       title,
       content: encryptedContent,
       tags,
@@ -38,6 +38,8 @@ exports.getNotes = async (req, res) => {
   }
 };
 
+
+
 // Update a note by id
 exports.updateNote = async (req, res) => {
   const userId = req.user.id;
@@ -45,14 +47,24 @@ exports.updateNote = async (req, res) => {
   const updates = req.body;
 
   try {
-    const note = await Note.findOneAndUpdate(
-      { _id: id, userId },
-      updates,
-      { new: true }
+    const note = await Note.findById(id);
+
+    if (!note) return res.status(404).json({ msg: 'Note not found' });
+
+    const isOwner = note.userId.toString() === req.user.id;
+    const isCollaborator = note.collaborators.some(
+      (collabId) => collabId.toString() === req.user.id
     );
-    if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
+
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    Object.assign(note, updates);
+    await note.save();
 
     res.json(note);
+
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -64,14 +76,24 @@ exports.deleteNote = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const note = await Note.findOneAndUpdate(
-      { _id: id, userId },
-      { isDeleted: true },
-      { new: true }
+    const note = await Note.findById(id);
+
+    if (!note) return res.status(404).json({ msg: 'Note not found' });
+
+    const isOwner = note.userId.toString() === req.user.id;
+    const isCollaborator = note.collaborators.some(
+      (collabId) => collabId.toString() === req.user.id
     );
-    if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
+
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    note.isDeleted = true;
+    await note.save();
 
     res.json({ msg: 'Note moved to trash' });
+
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -79,44 +101,73 @@ exports.deleteNote = async (req, res) => {
 
 
 exports.getTrash = async (req, res) => {
-    try {
-        const trashedNotes = await Note.find({ userId: req.user.id, isDeleted: true });
-        const decryptedNotes = trashedNotes.map(note => ({
-            ...note.toObject(),
-            content: decrypt(note.content),
-        }));
-        res.json(decryptedNotes);
-    } catch (err) {
-        res.status(500).json({ msg: err.message });
-    }
+  try {
+    const trashedNotes = await Note.find({ userId: req.user.id, isDeleted: true });
+    const decryptedNotes = trashedNotes.map(note => ({
+      ...note.toObject(),
+      content: decrypt(note.content),
+    }));
+    res.json(decryptedNotes);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 };
 
 // Restore note
 
 exports.restoreNote = async (req, res) => {
-    try {
-        const note = await Note.findOneAndUpdate(
-            { _id: req.params.id, userId: req.user.id, isDeleted: true },
-            { isDeleted: false },
-            { new: true }
-        );
-        if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
-        res.json({ msg: 'Note restored', note });
-    } catch (err) {
-        res.status(500).json({ msg: err.message });
+  try {
+    const note = await Note.findById(req.params.id);
+
+    if (!note || !note.isDeleted) {
+      return res.status(404).json({ msg: 'Note not found or unauthorized' });
     }
+
+    const isOwner = note.userId.toString() === req.user.id;
+    const isCollaborator = note.collaborators.some(
+      (collabId) => collabId.toString() === req.user.id
+    );
+
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    note.isDeleted = false;
+    await note.save();
+
+    res.json({ msg: 'Note restored', note });
+
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 };
 
 //After putting the note in trash, you can permanently delete it
 
 exports.permanentDeleteNote = async (req, res) => {
-    try {
-        const note = await Note.findOneAndDelete({ _id: req.params.id, userId: req.user.id, isDeleted: true });
-        if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
-        res.json({ msg: 'Note permanently deleted' });
-    } catch (err) {
-        res.status(500).json({ msg: err.message });
+  try {
+    const note = await Note.findById(req.params.id);
+
+    if (!note || !note.isDeleted) {
+      return res.status(404).json({ msg: 'Note not found or unauthorized' });
     }
+
+    const isOwner = note.userId.toString() === req.user.id;
+    const isCollaborator = note.collaborators.some(
+      (collabId) => collabId.toString() === req.user.id
+    );
+
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ msg: 'Not authorized' });
+    }
+
+    await Note.deleteOne({ _id: req.params.id });
+
+    res.json({ msg: 'Note permanently deleted' });
+
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 };
 
 
@@ -165,6 +216,30 @@ exports.searchNotes = async (req, res) => {
     }));
 
     res.json(decryptedNotes);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+
+// Get a public note by ID
+
+exports.getPublicNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const note = await Note.findOne({ _id: id, isPublic: true, isDeleted: false });
+
+    if (!note) {
+      return res.status(404).json({ msg: 'Public note not found' });
+    }
+
+    res.json({
+      title: note.title,
+      content: decrypt(note.content),
+      tags: note.tags,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+    });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
