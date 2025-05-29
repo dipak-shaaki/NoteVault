@@ -77,3 +77,44 @@ exports.deleteNote = async (req, res) => {
   }
 };
 
+
+exports.getTrash = async (req, res) => {
+    try {
+        const trashedNotes = await Note.find({ userId: req.user.id, isDeleted: true });
+        const decryptedNotes = trashedNotes.map(note => ({
+            ...note.toObject(),
+            content: decrypt(note.content),
+        }));
+        res.json(decryptedNotes);
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+
+// Restore note
+
+exports.restoreNote = async (req, res) => {
+    try {
+        const note = await Note.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id, isDeleted: true },
+            { isDeleted: false },
+            { new: true }
+        );
+        if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
+        res.json({ msg: 'Note restored', note });
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+
+// 🆕 Permanently delete note
+exports.permanentDeleteNote = async (req, res) => {
+    try {
+        const note = await Note.findOneAndDelete({ _id: req.params.id, userId: req.user.id, isDeleted: true });
+        if (!note) return res.status(404).json({ msg: 'Note not found or unauthorized' });
+        res.json({ msg: 'Note permanently deleted' });
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+};
+
