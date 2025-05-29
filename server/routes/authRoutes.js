@@ -14,4 +14,10 @@ router.post('/reset-password', authController.resetPassword);
 // Protect change-password route
 router.post('/change-password', authMiddleware, authController.changePassword);
 
+
+router.use(authMiddleware);
+
+router.patch('/change-username', authController.changeUsername);
+
+
 module.exports = router;

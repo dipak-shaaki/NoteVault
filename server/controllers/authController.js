@@ -178,3 +178,32 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+//Change username
+
+exports.changeUsername = async (req, res) => {
+    const { newUsername } = req.body;
+
+    try {
+        if (!newUsername) {
+            return res.status(400).json({ msg: 'New username is required' });
+        }
+
+        const existingUser = await User.findOne({ username: newUsername });
+        if (existingUser) {
+            return res.status(400).json({ msg: 'Username is already taken' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        user.username = newUsername;
+        await user.save();
+
+        res.json({ msg: 'Username updated successfully', username: user.username });
+    } catch (err) {
+        console.error('Change username error:', err);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
