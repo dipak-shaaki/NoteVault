@@ -9,3 +9,8 @@ dist
 
 # Ignore logs
 logs
+*.log
+# Ignore temporary files
+tmp
+# Ignore coverage reports
+coverage
