@@ -14,3 +14,9 @@ logs
 tmp
 # Ignore coverage reports
 coverage
+
+# Ignore IDE specific files
+.vscode         
+.idea
+# Ignore OS generated files
+.DS_Store
