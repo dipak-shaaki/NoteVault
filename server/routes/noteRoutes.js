@@ -19,4 +19,5 @@ router.get('/public/:id', getPublicNote);
 router.post('/:id/collaborators', authMiddleware, addCollaborator);
 
 
+
 module.exports = router;
