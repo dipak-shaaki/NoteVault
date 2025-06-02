@@ -1,5 +1,5 @@
 import HeroSection from './components/HeroSection';
-import FeaturesSection from './components/FeaturesSection';
+import FeaturesSection from './components/FeatureSection';
 
 export default function HomePage() {
 return (
@@ -24,3 +24,7 @@ return (
 </main>
 );
 }
+
+{/* Footer Section */}
+
+<footer className="bg-gray-100 text-center text-sm text-gray-600 py-6 border-t mt-10"> <div className="container mx-auto px-4"> <p>&copy; {new Date().getFullYear()} NoteVault. All rights reserved.</p> <div className="mt-2 flex justify-center gap-4 text-sm"> <a href="/privacy" className="hover:text-blue-600 transition">Privacy Policy</a> <a href="/terms" className="hover:text-blue-600 transition">Terms of Service</a> </div> </div> </footer>
