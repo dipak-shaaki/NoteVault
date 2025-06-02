@@ -25,7 +25,8 @@ export default function RegisterPage() {
       const res = await axios.post('/auth/register', formData);
       setMsg(res.data.msg);
       if (res.data.msg.includes('OTP')) {
-        // Save email in sessionStorage for verify step
+       
+        
         sessionStorage.setItem('verifyEmail', formData.email);
         router.push('/verify');
       }
