@@ -14,10 +14,7 @@ if (!token) {
 router.push('/login')
 return
 }
-
-javascript
-Copy
-Edit
+// Fetch notes from the API
 const fetchNotes = async () => {
   try {
     const res = await fetch('http://localhost:5000/api/notes', {
@@ -47,9 +44,6 @@ return (
 <div className="max-w-4xl mx-auto">
 <h1 className="text-2xl font-bold mb-6">Your Notes</h1>
 
-php-template
-Copy
-Edit
     {loading && <p>Loading notes...</p>}
     {error && <p className="text-red-500">{error}</p>}
 
