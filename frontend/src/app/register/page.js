@@ -1,73 +1,45 @@
-'use client';
-import { useState } from 'react';
-import axios from '../../services/api'; // we'll create this soon
-import { useRouter } from 'next/navigation';
+'use client'
+import { useState } from 'react'
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: ''
-  });
-  const [msg, setMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+const [form, setForm] = useState({
+email: '',
+username: '',
+password: '',
+})
 
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+const handleChange = (e) => {
+setForm({ ...form, [e.target.name]: e.target.value })
+}
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg('');
-    try {
-      const res = await axios.post('/auth/register', formData);
-      setMsg(res.data.msg);
-      if (res.data.msg.includes('OTP')) {
-       
-        
-        sessionStorage.setItem('verifyEmail', formData.email);
-        router.push('/verify');
-      }
-    } catch (err) {
-      setMsg(err?.response?.data?.msg || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+e.preventDefault()
+try {
+const res = await fetch('http://localhost:5000/api/auth/register', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(form),
+})
+const data = await res.json()
+alert(data.msg)
+} catch (err) {
+alert('Something went wrong')
+}
+}
 
-  return (
-    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        /><br/>
-        <input
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-        /><br/>
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        /><br/>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Sending OTP...' : 'Register'}
-        </button>
-      </form>
-      {msg && <p>{msg}</p>}
-    </div>
-  );
+return (
+<main className="flex items-center justify-center min-h-screen bg-gray-50">
+<div className="w-full max-w-md p-8 bg-white shadow-md rounded-md">
+<h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
+<form onSubmit={handleSubmit} className="space-y-4">
+<input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+<input type="text" name="username" placeholder="Username" value={form.username} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+<input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+<button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition" >
+Send OTP
+</button>
+</form>
+</div>
+</main>
+)
 }
