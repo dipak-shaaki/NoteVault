@@ -27,3 +27,12 @@ package-lock.json
 yarn.lock
 
 # Ignore npm debug log          
+npm-debug.log*
+# Ignore pnpm lock files
+pnpm-lock.yaml              
+# Ignore build directories
+build
+# Ignore test directories
+tests
+# Ignore documentation directories
+docs    
