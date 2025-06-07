@@ -100,5 +100,3 @@ Save Changes
 </div>
 )
 }
-// This code is a Next.js page component for editing a note.
-// It fetches the note data based on the ID from the URL parameters,
