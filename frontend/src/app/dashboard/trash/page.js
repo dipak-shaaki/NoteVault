@@ -92,4 +92,6 @@ Delete Permanently
 }
 
 // This code is for a Trash page in a note-taking application built with Next.js.
+
+
 // It allows users to view, restore, or permanently delete notes that have been moved to the trash.
